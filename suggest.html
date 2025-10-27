@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>建议/意见收集</title>
+</head>
+<script src="./src/api/tool/jquery.min.js"></script>
+<body>
+<div id="div1"  style="display: flex;flex-direction: column;">
+    <div style="margin-top: 20px;font-weight: bold;    color: cornflowerblue;">当前页面不会获取用户的任何信息，属于完全匿名。请放心提出自己的宝贵建议及意见</div>
+    <textarea placeholder="请输入您的宝贵建议、意见，同时请注意文明用语。（注：3分钟内，只能提交一次！请组织好语言再进行填写。限2000字以内）" id="suggestText" style="    height: 70vh;
+    font-size: 16px;
+    border: 3px solid cornflowerblue;
+    border-radius: 5px;"></textarea>
+    <button onclick="sumbitSuggest()" style="margin-top: 15px;
+    background: cornflowerblue;
+    color: white;
+    border: 0;
+    height: 40px;
+    border-radius: 5px;
+    font-size: 18px;">匿名提交</button>
+</div>
+<div  id="div2"  style="display:none">
+    提交成功！<a href="" onclick="refresh()">再写一条</a>
+</div>
+<script>
+    function refresh() {
+       window.location.reload();
+    }
+    function changeShow() {
+        document.getElementById("div1").style="display:none";
+        document.getElementById("div2").style="height: 100vh;display: flex;align-items: center;justify-content: center;font-size: 20px;font-weight: bold;";
+    }
+    function sumbitSuggest() {
+        var val=document.getElementById("suggestText").value;
+        if(!val)
+            return;
+        $.ajax({
+            type: "POST",
+            url: "http://localhost:8180/tk_custom/suggest/scanAdd",
+            data: JSON.stringify({suggestText:val}),
+            contentType: "application/json",
+            success: function(respMsg){
+                if(respMsg.code=='200'){
+                    alert("提交成功！");
+                    changeShow();
+                }else{
+                    alert(respMsg.msg);
+                }
+            }
+        });
+    }
+
+</script>
+</body>
+
+</html>
