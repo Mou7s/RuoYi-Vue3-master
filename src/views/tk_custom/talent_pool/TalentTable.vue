@@ -56,12 +56,18 @@
     </el-form>
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="handleAdd"
+        <el-button
+          v-hasPermi="['tk_custom:talent_pool:add']"
+          type="primary"
+          plain
+          icon="Plus"
+          @click="handleAdd"
           >新增</el-button
         >
       </el-col>
       <el-col :span="1.5">
         <el-button
+          v-hasPermi="['tk_custom:talent_pool:edit']"
           type="primary"
           plain
           icon="Plus"
@@ -72,6 +78,7 @@
       </el-col>
       <el-col :span="1.5">
         <el-button
+          v-hasPermi="['tk_custom:talent_pool:del']"
           type="danger"
           plain
           icon="Delete"
@@ -86,6 +93,7 @@
       ></right-toolbar>
     </el-row>
     <el-table
+      stripe
       v-loading="loading"
       :data="tableList"
       @selection-change="handleSelectionChange"
@@ -157,6 +165,7 @@
       >
         <template #default="scope">
           <el-button
+            v-hasPermi="['tk_custom:talent_pool:edit']"
             link
             type="primary"
             icon="Edit"
@@ -168,6 +177,7 @@
     </el-table>
     <!-- 分页组件 -->
     <pagination
+      style="margin-top: 0px"
       v-show="total > 0"
       :page-sizes="[10, 20, 30, 50, 100, 200, 300]"
       :total="total"
@@ -327,81 +337,84 @@
 <script setup name="TalentOperation">
 import { nextTick, reactive, ref, onMounted } from "vue";
 import {
-  getListApi,        // 获取人才列表API
-  delByIdsApi,       // 批量删除人才API
-  addTalentInfoApi,  // 新增人才API
-  uploadFileApi,     // 文件上传API
-  getTalentInfoApi,  // 获取人才详情API
+  getListApi, // 获取人才列表API
+  delByIdsApi, // 批量删除人才API
+  addTalentInfoApi, // 新增人才API
+  uploadFileApi, // 文件上传API
+  getTalentInfoApi, // 获取人才详情API
   editTalentInfoApi, // 修改人才API
 } from "@/api/tk_custom/talentApi";
 import { useDict } from "@/utils/dict"; // 字典工具
-import modal from "@/plugins/modal";     // 模态框工具
-import { status } from "nprogress";      // 进度条
+import modal from "@/plugins/modal"; // 模态框工具
+import { status } from "nprogress"; // 进度条
 
-// 加载状态
+// 加载状态 - 表格数据加载时显示
 const loading = ref(false);
-// 获取学历字典数据
+// 获取学历字典数据 - 用于学历下拉选择
 const { edu: edus } = useDict("edu");
-// 获取是否字典数据
+// 获取是否字典数据 - 用于婚否等是/否选择
 const { sys_yes_no } = useDict("sys_yes_no");
-// 获取性别字典数据
+// 获取性别字典数据 - 用于性别选择
 const { sys_user_sex } = useDict("sys_user_sex");
-// 查询表单引用
+// 查询表单引用 - 用于重置查询表单
 const queryRef = ref(null);
-// API代理路径
+// API代理路径 - 文件上传时使用的API基础路径
 const proxyPath = ref([import.meta.env.VITE_APP_BASE_API]);
-// 是否显示搜索表单
+// 是否显示搜索表单 - 控制搜索表单的显示与隐藏
 const showSearch = ref(true);
-// 提交表单加载状态
+// 提交表单加载状态 - 表单提交时显示加载动画
 const isSubLoading = ref(false);
-// 总记录数
+// 总记录数 - 表格数据总条数
 const total = ref(0);
-// 选中的记录ID数组
+// 选中的记录ID数组 - 用于批量操作
 const selectedIds = ref([]);
-// 是否单选
+// 是否单选 - 控制修改按钮的禁用状态
 const single = ref(true);
-// 是否多选
+// 是否多选 - 控制删除按钮的禁用状态
 const multiple = ref(true);
 
-// 上传状态
+// 上传状态 - 文件上传过程中显示加载动画
 const isUploading = ref(false);
 
-// 表单参数
+// 表单参数 - 查询人才列表的条件
 const queryParams = reactive({
-  pageNum: 1,        // 当前页码
-  pageSize: 10,      // 每页条数
-  name: undefined,   // 姓名
-  position: undefined, // 职位
-  eduId: undefined,  // 学历ID
-  schoolName: undefined, // 学校名称
+  pageNum: 1, // 当前页码
+  pageSize: 10, // 每页条数
+  name: undefined, // 姓名 - 模糊查询
+  position: undefined, // 职位 - 模糊查询
+  eduId: undefined, // 学历ID - 精确查询
+  schoolName: undefined, // 学校名称 - 模糊查询
 });
 
-// 表格数据列表
+// 表格数据列表 - 存储人才信息数据
 const tableList = ref([]);
 
-// 对话框显示状态
+// 对话框显示状态 - 控制新增/修改对话框的显示与隐藏
 const openDialog = ref(false);
-// 对话框标题
+// 对话框标题 - 根据新增/修改模式动态显示
 const dialogDialog = ref("添加人员信息");
 
-// 人才信息表单
+// 人才信息表单 - 新增/修改人才信息的表单数据
 const talentInfoForm = reactive({
-  id: 0,              // 主键ID
-  name: "",           // 姓名
-  gender: "",         // 性别
-  eduId: "",          // 学历ID
-  birthDate: "",      // 出生日期
-  isMarriedId: "",    // 婚否
-  position: "",       // 职位
-  phoneNumber: "",    // 联系电话
-  schoolName: "",     // 毕业学校
-  nativePlace: "",    // 籍贯
-  attachments: "",    // 附件路径
-  remark: "",         // 备注
-  imgPaths: [],       // 图片路径数组
+  id: 0, // 主键ID - 0表示新增
+  name: "", // 姓名 - 必填
+  gender: "", // 性别 - 必填，0表示男，1表示女
+  eduId: "", // 学历ID - 必填，关联字典表
+  birthDate: "", // 出生日期 - 必填，日期格式
+  isMarriedId: "", // 婚否 - 必填，Y表示是，N表示否
+  position: "", // 职位 - 必填
+  phoneNumber: "", // 联系电话 - 必填
+  schoolName: "", // 毕业学校 - 必填
+  nativePlace: "", // 籍贯 - 必填
+  attachments: "", // 附件路径 - 存储图片路径，逗号分隔
+  remark: "", // 备注 - 可选
+  imgPaths: [], // 图片路径数组 - 上传过程中临时存储图片路径
 });
 
-// 执行查询
+/**
+ * 执行查询
+ * 触发人才列表数据加载
+ */
 function handleQuery() {
   handleTalentList();
 }
@@ -420,7 +433,10 @@ async function handleTalentList() {
   total.value = t;
 }
 
-// 重置查询
+/**
+ * 重置查询
+ * 重置查询参数并重新加载数据
+ */
 function resetQuery() {
   resetQueryData();
   handleQuery();
@@ -467,6 +483,7 @@ async function handleUpdate(record) {
  * @param {Object} talentInfo - 人才信息数据
  */
 function setTalentInfoForm(talentInfo) {
+  // 设置基本信息
   talentInfoForm.id = talentInfo.id;
   talentInfoForm.name = talentInfo.name;
   talentInfoForm.gender = talentInfo.gender + "";
@@ -478,13 +495,13 @@ function setTalentInfoForm(talentInfo) {
   talentInfoForm.schoolName = talentInfo.schoolName;
   talentInfoForm.nativePlace = talentInfo.nativePlace;
   talentInfoForm.remark = talentInfo.remark;
-  
+
   // 处理附件路径
   const imagesPaths = talentInfo.attachments
     ? talentInfo.attachments.split(",")
     : [];
   talentInfoForm.attachments = imagesPaths;
-  
+
   // 设置上传文件列表
   uploadFileList.value = imagesPaths.map((item) => {
     return {
@@ -532,9 +549,9 @@ function resetQueryData() {
   queryParams.eduId = undefined;
 }
 
-// 人才表单引用
+// 人才表单引用 - 用于表单验证和重置
 const talentRef = ref(null);
-// 表单验证规则
+// 表单验证规则 - 定义各字段的验证规则
 const rules = {
   name: [
     { required: true, message: "请输入姓名", trigger: ["change", "blur"] },
@@ -544,12 +561,14 @@ const rules = {
   ],
   phoneNumber: [
     { required: true, message: "请输入联系电话", trigger: ["change", "blur"] },
+    {
+      pattern: /^1[3-9]\d{9}$|^\d{3,4}-\d{7,8}$/,
+      message: "请输入正确的电话号码格式(手机:11位数字/固话:区号-号码)",
+      trigger: ["change", "blur"],
+    },
   ],
   gender: [
     { required: true, message: "请选择性别", trigger: ["change", "blur"] },
-  ],
-  isMarriedId: [
-    { required: true, message: "请选择婚否", trigger: ["change", "blur"] },
   ],
   eduId: [
     { required: true, message: "请选择学历", trigger: ["change", "blur"] },
@@ -561,7 +580,7 @@ const rules = {
     { required: true, message: "请输入籍贯", trigger: ["change", "blur"] },
   ],
 };
-// 是否为编辑模式
+// 是否为编辑模式 - true表示修改，false表示新增
 const isEdit = ref(false);
 
 /**
@@ -586,12 +605,12 @@ function formCancel() {
   dialogClose();
 }
 
-// 上传组件引用
+// 上传组件引用 - 用于操作上传组件
 const uploadRef = ref(null);
-// 要上传的图片数据数组
-const uploadArr = ref([]); 
-// 修改时回显图片列表
-const uploadFileList = ref([]); 
+// 要上传的图片数据数组 - 存储待上传的图片信息
+const uploadArr = ref([]);
+// 修改时回显图片列表 - 存储已上传成功的图片信息
+const uploadFileList = ref([]);
 
 /**
  * 上传文件变化事件
@@ -624,9 +643,9 @@ function handleRemove(file, fileList) {
   }
 }
 
-// 预览对话框显示状态
+// 预览对话框显示状态 - 控制图片预览对话框的显示与隐藏
 const dialogVisible = ref(false);
-// 预览图片路径
+// 预览图片路径 - 存储当前预览的图片URL
 const dialogImageUrl = ref("");
 
 /**
@@ -670,8 +689,9 @@ function uploadError(err, file, fileList) {
 }
 
 /**
- * 自定义上传方法
+ * 自定义上传方法（未使用）
  * @param {Object} content - 上传内容
+ * @description 该函数目前未被调用，可能是预留的自定义上传逻辑
  */
 function uploadImg(content) {
   const formData = new FormData();
@@ -693,17 +713,26 @@ function handleMoreFiles(files, fileList) {
  * @returns {Array} - 上传后的图片路径数组
  */
 async function uploadImages() {
+  // 如果没有待上传图片，直接返回空数组
   if (!uploadArr.value.length) return [];
+
+  // 创建FormData对象，用于上传文件
   const formData = new FormData();
   uploadArr.value.forEach((item) => {
     formData.append("imageFiles", item.file);
   });
+
+  // 调用上传API
   const res = await uploadFileApi(formData);
   const { data, code, msg } = res;
   let imagePath = [];
+
+  // 上传成功，处理返回的图片路径
   if (code == 200) {
     imagePath = data.map((item) => proxyPath.value + item);
   }
+
+  // 清空待上传图片数组
   uploadArr.value = [];
   return imagePath;
 }
@@ -712,24 +741,27 @@ async function uploadImages() {
  * 提交表单
  */
 async function submitForm() {
+  // 表单验证
   talentRef.value.validate(async (valid) => {
     if (valid) {
       try {
+        // 设置提交加载状态
         isSubLoading.value = true;
-        
-        // 上传图片
+
+        // 上传新选择的图片
         const imagePathArr = await uploadImages();
-        
-        // 添加已存在的图片路径
+
+        // 添加已存在的图片路径（修改时使用）
         if (uploadFileList.value.length > 0) {
           uploadFileList.value.forEach((item) => {
             imagePathArr.push(item.url);
           });
         }
-        
-        // 设置附件路径
+
+        // 将图片路径数组转换为逗号分隔的字符串
         talentInfoForm.attachments = imagePathArr.join(",");
-        
+
+        // 根据是否为编辑模式执行不同的操作
         if (talentInfoForm.id && isEdit.value) {
           // 修改人才信息
           const res = await editTalentInfoApi(talentInfoForm);
@@ -758,6 +790,7 @@ async function submitForm() {
       } catch (error) {
         console.log(error.message);
       } finally {
+        // 重置提交加载状态
         isSubLoading.value = false;
       }
     }
