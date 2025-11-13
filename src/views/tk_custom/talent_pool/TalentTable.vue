@@ -15,14 +15,7 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="学校" prop="flowNo">
-        <el-input
-          v-model="queryParams.schoolName"
-          placeholder="请输入学校"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
+
       <el-form-item label="姓名" prop="flowNo">
         <el-input
           v-model="queryParams.name"
@@ -31,7 +24,7 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="文化程度" prop="process">
+      <el-form-item label="学历" prop="process">
         <el-select
           style="width: 100px"
           v-model="queryParams.eduId"
@@ -45,6 +38,14 @@
             :value="dict.value"
           />
         </el-select>
+      </el-form-item>
+      <el-form-item label="学校" prop="flowNo">
+        <el-input
+          v-model="queryParams.schoolName"
+          placeholder="请输入学校"
+          clearable
+          @keyup.enter="handleQuery"
+        />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery"
@@ -97,9 +98,11 @@
         align="center"
         prop="nativePlace"
       />
-      <el-table-column label="性别" width="55" align="center" prop="gender">
+      <el-table-column label="性别" width="60" align="center" prop="gender">
         <template #default="scope">
-          <dict-tag :options="sys_user_sex" :value="scope.row.gender" />
+          <el-tag :type="scope.row.gender === '0' ? 'primary' : 'danger'">
+            {{ scope.row.gender == "0" ? "男" : "女" }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column label="岗位" align="center" prop="position" />
@@ -123,7 +126,7 @@
       >
         <template #default="scope">
           <el-tag :type="scope.row.isMarriedId === 'Y' ? 'primary' : 'danger'">
-            {{ scope.row.isMarriedId == "Y" ? "男" : "女" }}
+            {{ scope.row.isMarriedId == "Y" ? "是" : "否" }}
           </el-tag>
         </template>
       </el-table-column>
@@ -160,13 +163,13 @@
             @click="handleUpdate(scope.row)"
             >修改</el-button
           >
-          <!--<el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" >删除</el-button>-->
         </template>
       </el-table-column>
     </el-table>
     <!-- 分页组件 -->
     <pagination
       v-show="total > 0"
+      :page-sizes="[10, 20, 30, 50, 100, 200, 300]"
       :total="total"
       v-model:page="queryParams.pageNum"
       v-model:limit="queryParams.pageSize"
@@ -234,7 +237,7 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="文化程度" prop="eduId">
+        <el-form-item label="学历" prop="eduId">
           <el-select
             v-model="talentInfoForm.eduId"
             placeholder="请选择"
@@ -261,6 +264,15 @@
             value-format="YYYY-MM-DD HH:mm:ss"
             type="date"
             placeholder="请选择出生日期"
+          />
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input
+            v-model="talentInfoForm.remark"
+            style="width: 100%"
+            :rows="2"
+            type="textarea"
+            placeholder="请输入备注"
           />
         </el-form-item>
 
@@ -369,6 +381,7 @@ const talentInfoForm = reactive({
   schoolName: "",
   nativePlace: "",
   attachments: "",
+  remark: "",
 });
 
 // 执行查询
@@ -388,7 +401,6 @@ async function handleTalentList() {
 
 // 重置查询
 function resetQuery() {
-  // this.queryRef.value.resetFields();
   resetQueryData();
   handleQuery();
 }
@@ -430,11 +442,11 @@ function setTalentInfoForm(talentInfo) {
   talentInfoForm.phoneNumber = talentInfo.phoneNumber;
   talentInfoForm.schoolName = talentInfo.schoolName;
   talentInfoForm.nativePlace = talentInfo.nativePlace;
+  talentInfoForm.remark = talentInfo.remark;
   const imagesPaths = talentInfo.attachments
     ? talentInfo.attachments.split(",")
     : [];
   talentInfoForm.attachments = imagesPaths;
-  // "/dev-api/profile/talentPic_zip/2025/11/12/MIUI02_20251112120254A001.jpg,/dev-api/profile/talentPic_zip/2025/11/12/MIUI03_20251112120257A002.jpg"
   uploadFileList.value = imagesPaths.map((item) => {
     return {
       name: item.split("/").pop(),
@@ -485,10 +497,7 @@ const rules = {
     { required: true, message: "请选择婚否", trigger: ["change", "blur"] },
   ],
   eduId: [
-    { required: true, message: "请选择文化程度", trigger: ["change", "blur"] },
-  ],
-  schoolName: [
-    { required: true, message: "请输入毕业学校", trigger: ["change", "blur"] },
+    { required: true, message: "请选择学历", trigger: ["change", "blur"] },
   ],
   birthDate: [
     { required: true, message: "请选择出生日期", trigger: ["change", "blur"] },
