@@ -38,12 +38,20 @@ export function editTalentInfoApi(data) {
 }
 
 
-// 依据id删除人员
+// 依据ids 批量删除人员
 export function delByIdsApi(ids) {
   return request({
     url: "/tk_custom/talent/delTalentByIds",
     method: "delete",
     data: ids,
+  });
+}
+
+// 依据id删除人员
+export function delByIdApi(id) {
+  return request({
+    url: `/tk_custom/talent/delTalentById/${id}`,
+    method: "delete",
   });
 }
 
