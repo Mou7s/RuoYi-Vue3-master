@@ -97,9 +97,12 @@
       v-loading="loading"
       :data="tableList"
       @selection-change="handleSelectionChange"
+      style="width: 100%"
+      :max-height="tableHeight"
     >
-      <el-table-column type="selection" width="55" align="center" />
+      <el-table-column fixed type="selection" width="55" align="center" />
       <el-table-column
+        fixed
         label="面试日期"
         width="95"
         align="center"
@@ -109,9 +112,17 @@
           <span>{{ parseTime(scope.row.interviewTime, "{y}-{m}-{d}") }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="姓名" width="100" align="center" prop="name" />
+      <el-table-column
+        fixed
+        show-overflow-tooltip
+        label="姓名"
+        width="100"
+        align="center"
+        prop="name"
+      />
       <el-table-column
         label="籍贯"
+        show-overflow-tooltip
         width="100"
         align="center"
         prop="nativePlace"
@@ -123,17 +134,45 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="岗位" align="center" prop="position" />
-      <el-table-column label="学历" width="60" align="center" prop="eduId">
+      <el-table-column
+        label="岗位"
+        align="center"
+        prop="position"
+        min-width="120"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        label="学历"
+        width="60"
+        align="center"
+        prop="eduId"
+        show-overflow-tooltip
+      >
         <template #default="scope">
           <dict-tag :options="edus" :value="scope.row.eduId" />
         </template>
       </el-table-column>
-      <el-table-column label="学校" align="center" prop="schoolName" />
-      <el-table-column label="电话" align="center" prop="phoneNumber" />
-      <el-table-column label="出生日期" align="center" prop="birthDate">
+      <el-table-column
+        min-width="150"
+        label="学校"
+        align="center"
+        prop="schoolName"
+        show-overflow-tooltip
+      />
+      <el-table-column
+        label="电话"
+        width="120"
+        align="center"
+        prop="phoneNumber"
+      />
+      <el-table-column
+        label="出生日期"
+        width="95"
+        align="center"
+        prop="birthDate"
+      >
         <template #default="scope">
-          <span>{{ parseTime(scope.row.birthDate, "{y}-{m}-{d}") }}</span>
+          <span>{{ parseTime(scope.row.birthDate, "{y}-{m}-{d} ") }}</span>
         </template>
       </el-table-column>
       <el-table-column
@@ -167,22 +206,30 @@
           </template>
         </template>
       </el-table-column>
-      <el-table-column label="备注" align="center" prop="remark" />
+      <el-table-column
+        label="备注"
+        min-width="100"
+        align="center"
+        prop="remark"
+        show-overflow-tooltip
+      />
       <el-table-column
         label="创建人"
         width="100"
         align="center"
         prop="creator"
+        show-overflow-tooltip
       />
       <el-table-column
         label="创建日期"
-        width="100"
+        width="180"
         align="center"
         prop="createTime"
+        show-overflow-tooltip
       >
         <template #default="scope">
           <span>
-            {{ parseTime(scope.row.createTime, "{y}-{m}-{d}") }}
+            {{ parseTime(scope.row.createTime, "{y}-{m}-{d} {h}:{i}:{s}") }}
           </span>
         </template>
       </el-table-column>
@@ -191,20 +238,23 @@
         width="100"
         align="center"
         prop="modifier"
+        show-overflow-tooltip
       />
       <el-table-column
         label="更新日期"
-        width="100"
+        width="180"
         align="center"
         prop="updateTime"
+        show-overflow-tooltip
       >
         <template #default="scope">
           <span>
-            {{ parseTime(scope.row.updateTime, "{y}-{m}-{d}") }}
+            {{ parseTime(scope.row.updateTime, "{y}-{m}-{d} {h}:{i}:{s}") }}
           </span>
         </template>
       </el-table-column>
       <el-table-column
+        fixed="right"
         label="操作"
         align="center"
         class-name="small-padding fixed-width"
@@ -225,7 +275,7 @@
     <pagination
       style="margin-top: 0px"
       v-show="total > 0"
-      :page-sizes="[10, 20, 30, 50, 100, 200, 300]"
+      :page-sizes="[30, 50, 100, 200, 300]"
       :total="total"
       v-model:page="queryParams.pageNum"
       v-model:limit="queryParams.pageSize"
@@ -353,7 +403,7 @@
             class="uploader"
             :auto-upload="false"
             multiple
-            :limit="8"
+            :limit="10"
             :drag="false"
             accept=".png,.jpg,.bmp,.jpeg"
             list-type="picture-card"
@@ -434,7 +484,7 @@ const isUploading = ref(false);
 // 表单参数 - 查询人才列表的条件
 const queryParams = reactive({
   pageNum: 1, // 当前页码
-  pageSize: 10, // 每页条数
+  pageSize: 30, // 每页条数
   name: undefined, // 姓名 - 模糊查询
   position: undefined, // 职位 - 模糊查询
   eduId: undefined, // 学历ID - 精确查询
@@ -869,10 +919,28 @@ function generateUUIDWithoutDash() {
   });
 }
 
+// 表格高度 - 动态计算表格最大高度
+const tableHeight = ref(500);
+
+/**
+ * 计算表格高度
+ * 确保表格在页面中有足够空间且不导致主页面滚动
+ */
+function calculateTableHeight() {
+  // 获取视口高度
+  const viewportHeight = window.innerHeight;
+  // 减去页面其他元素占用的高度（导航栏、搜索栏、工具栏等）
+  const otherElementsHeight = 260; // 根据实际情况调整
+  tableHeight.value = viewportHeight - otherElementsHeight;
+}
+
 /**
  * 组件挂载后执行
  */
 onMounted(() => {
+  calculateTableHeight();
+  // 监听窗口大小变化，动态调整表格高度
+  window.addEventListener("resize", calculateTableHeight);
   nextTick(() => {
     handleQuery(); // 加载数据
   });
@@ -910,5 +978,16 @@ onMounted(() => {
 // 图片间距
 .imageClass + .imageClass {
   margin-left: 2px;
+}
+
+// 表格容器样式
+.table-container {
+  height: 100%;
+  overflow: hidden;
+}
+
+// 确保表格内容超出时只在表格内部显示滚动条
+:deep(.el-table__body-wrapper) {
+  overflow-y: auto;
 }
 </style>
