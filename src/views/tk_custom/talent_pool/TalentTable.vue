@@ -451,7 +451,6 @@ import {
 } from "@/api/tk_custom/talentApi";
 import { useDict } from "@/utils/dict"; // 字典工具
 import modal from "@/plugins/modal"; // 模态框工具
-import { status } from "nprogress"; // 进度条
 
 // 加载状态 - 表格数据加载时显示
 const loading = ref(false);
@@ -926,14 +925,27 @@ const tableHeight = ref(500);
  * 计算表格高度
  * 确保表格在页面中有足够空间且不导致主页面滚动
  */
-function calculateTableHeight() {
+function calculateTableHeight(othHeight = 260) {
   // 获取视口高度
   const viewportHeight = window.innerHeight;
   // 减去页面其他元素占用的高度（导航栏、搜索栏、工具栏等）
-  const otherElementsHeight = 260; // 根据实际情况调整
+  const otherElementsHeight = othHeight; // 根据实际情况调整
   tableHeight.value = viewportHeight - otherElementsHeight;
 }
 
+/**
+ * 监听显示搜索栏变化
+ */
+watch(
+  () => showSearch.value,
+  (val) => {
+    if (val) {
+      calculateTableHeight();
+    } else {
+      calculateTableHeight(215);
+    }
+  }
+);
 /**
  * 组件挂载后执行
  */
