@@ -99,6 +99,16 @@
       @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="55" align="center" />
+      <el-table-column
+        label="面试日期"
+        width="95"
+        align="center"
+        prop="interviewTime"
+      >
+        <template #default="scope">
+          <span>{{ parseTime(scope.row.interviewTime, "{y}-{m}-{d}") }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="姓名" width="100" align="center" prop="name" />
       <el-table-column
         label="籍贯"
@@ -158,6 +168,42 @@
         </template>
       </el-table-column>
       <el-table-column label="备注" align="center" prop="remark" />
+      <el-table-column
+        label="创建人"
+        width="100"
+        align="center"
+        prop="creator"
+      />
+      <el-table-column
+        label="创建日期"
+        width="100"
+        align="center"
+        prop="createTime"
+      >
+        <template #default="scope">
+          <span>
+            {{ parseTime(scope.row.createTime, "{y}-{m}-{d}") }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="修改人"
+        width="100"
+        align="center"
+        prop="modifier"
+      />
+      <el-table-column
+        label="更新日期"
+        width="100"
+        align="center"
+        prop="updateTime"
+      >
+        <template #default="scope">
+          <span>
+            {{ parseTime(scope.row.updateTime, "{y}-{m}-{d}") }}
+          </span>
+        </template>
+      </el-table-column>
       <el-table-column
         label="操作"
         align="center"
@@ -274,6 +320,15 @@
             value-format="YYYY-MM-DD HH:mm:ss"
             type="date"
             placeholder="请选择出生日期"
+          />
+        </el-form-item>
+        <el-form-item label="面试日期" prop="interviewTime">
+          <el-date-picker
+            style="width: 100%"
+            v-model="talentInfoForm.interviewTime"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            type="date"
+            placeholder="请选择面试日期"
           />
         </el-form-item>
         <el-form-item label="备注" prop="remark">
@@ -401,6 +456,7 @@ const talentInfoForm = reactive({
   gender: "", // 性别 - 必填，0表示男，1表示女
   eduId: "", // 学历ID - 必填，关联字典表
   birthDate: "", // 出生日期 - 必填，日期格式
+  interviewTime: "", // 面试日期
   isMarriedId: "", // 婚否 - 必填，Y表示是，N表示否
   position: "", // 职位 - 必填
   phoneNumber: "", // 联系电话 - 必填
@@ -495,6 +551,7 @@ function setTalentInfoForm(talentInfo) {
   talentInfoForm.schoolName = talentInfo.schoolName;
   talentInfoForm.nativePlace = talentInfo.nativePlace;
   talentInfoForm.remark = talentInfo.remark;
+  talentInfoForm.interviewTime = talnetInfo.interviewTime;
 
   // 处理附件路径
   const imagesPaths = talentInfo.attachments
@@ -575,6 +632,9 @@ const rules = {
   ],
   birthDate: [
     { required: true, message: "请选择出生日期", trigger: ["change", "blur"] },
+  ],
+  interviewTime: [
+    { required: true, message: "请选择面试日期", trigger: ["change", "blur"] },
   ],
   nativePlace: [
     { required: true, message: "请输入籍贯", trigger: ["change", "blur"] },
