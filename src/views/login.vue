@@ -43,9 +43,12 @@
           style="width: 63%"
           @keyup.enter="handleLogin"
         >
-          <template #prefix
-            ><svg-icon icon-class="validCode" class="el-input__icon input-icon"
-          /></template>
+          <template #prefix>
+            <svg-icon
+              icon-class="validCode"
+              class="el-input__icon input-icon"
+            />
+          </template>
         </el-input>
         <div class="login-code">
           <img :src="codeUrl" @click="getCode" class="login-code-img" />
@@ -202,6 +205,7 @@ getCookie();
   background-image: url("../assets/images/login-background.jpg");
   background-size: cover;
 }
+
 .title {
   margin: 0px auto 30px auto;
   text-align: center;
@@ -213,32 +217,39 @@ getCookie();
   background: #ffffff;
   width: 400px;
   padding: 25px 25px 5px 25px;
+
   .el-input {
     height: 40px;
+
     input {
       height: 40px;
     }
   }
+
   .input-icon {
     height: 39px;
     width: 14px;
     margin-left: 0px;
   }
 }
+
 .login-tip {
   font-size: 13px;
   text-align: center;
   color: #bfbfbf;
 }
+
 .login-code {
   width: 33%;
   height: 40px;
   float: right;
+
   img {
     cursor: pointer;
     vertical-align: middle;
   }
 }
+
 .el-login-footer {
   height: 40px;
   line-height: 40px;
@@ -251,6 +262,7 @@ getCookie();
   font-size: 12px;
   letter-spacing: 1px;
 }
+
 .login-code-img {
   height: 40px;
   padding-left: 12px;
