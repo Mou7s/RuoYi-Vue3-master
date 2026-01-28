@@ -409,6 +409,7 @@ function getList() {
   listPd(queryParams.value).then((response) => {
     pdList.value = response.rows;
     total.value = response.total;
+    console.log("pdList:", pdList.value);
     loading.value = false;
   });
 }
